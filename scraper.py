@@ -94,6 +94,7 @@ def get_children(names, elements):
                 # if did not find valid children, set the element to None
                 else:
                     elements[i] = None
+                print(elements[i])
         # after iterating through parent elements, set parent elements to the valid child elements, then recursion
         elements = children
     return elements
@@ -101,7 +102,6 @@ def get_children(names, elements):
 
 # Returns either the text elements or links in a given soup object by pattern
 def get_text_by_pattern(soup, pattern, get_link=False):
-    print(pattern)
     element_names_unformatted = pattern.split(">")
     element_names = []
     # loop that parse pattern and store a list of tag, class pair
@@ -111,7 +111,7 @@ def get_text_by_pattern(soup, pattern, get_link=False):
             element_names.append((el_parts[0], el_parts[1]))
         else:
             element_names.append((el_name, None))
-    print(element_names)
+    # print(element_names)
     elements = None
     # now find parent elements
     if element_names[0][1]:
@@ -173,7 +173,7 @@ def main():
     print(issues)
     for i, desc in enumerate(descriptions):
         print(f"======= {i} =======")
-        print(desc)
+        print(f"{desc[:10]}....{desc[-10:-1]}")
     # check if there is an issue description correspond to each issue
     if len(issues) != len(descriptions) and not args.force:
         print(f"Error: Issue length({len(issues)}) does not match description length({len(descriptions)})")
@@ -203,5 +203,8 @@ def main():
                              ftfy.fix_text(descriptions[i]), args.url])
         writer.writerow(["", "", "", ""])
 
+# ./scraper.py "Adam Schiff" "https://adamschiff.com/issues/" "div#toggle default>h3" "div#wpb_text_column wpb_content_element>div#wpb_wrapper"
+# ./scraper.py -fl "div#tiles>div>a" "Pete Aguilar" "https://peteaguilar.com/on-the-issues/" "div#not-secret>h3" "section#article>div#insides"
+# ./scraper.py -fl "div>div#_2Z-zX>a" "Josh Barnett" "https://www.barnettforaz.com/cd7-issues-arizona" "div>div#_2Z-zX>a" "div#_1Q9if"
 
 main()
