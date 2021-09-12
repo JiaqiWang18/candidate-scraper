@@ -82,7 +82,8 @@ def get_children(names, elements):
                 if pair[1]:
                     # set the parent element to the children that matches the pattern pair
                     elements[i] = elements[i].findChildren(
-                        pair[0], {"class", pair[1]}, recursive=False
+                        # need to be set to true to look for indirect children for this website
+                        pair[0], {"class", pair[1]}, recursive=True
                     )
                 # do not use class if no class
                 else:
@@ -94,7 +95,6 @@ def get_children(names, elements):
                 # if did not find valid children, set the element to None
                 else:
                     elements[i] = None
-                print(elements[i])
         # after iterating through parent elements, set parent elements to the valid child elements, then recursion
         elements = children
     return elements
@@ -173,7 +173,7 @@ def main():
     print(issues)
     for i, desc in enumerate(descriptions):
         print(f"======= {i} =======")
-        print(f"{desc[:10]}....{desc[-10:-1]}")
+        print(f"{desc}")
     # check if there is an issue description correspond to each issue
     if len(issues) != len(descriptions) and not args.force:
         print(f"Error: Issue length({len(issues)}) does not match description length({len(descriptions)})")
@@ -205,6 +205,6 @@ def main():
 
 # ./scraper.py "Adam Schiff" "https://adamschiff.com/issues/" "div#toggle default>h3" "div#wpb_text_column wpb_content_element>div#wpb_wrapper"
 # ./scraper.py -fl "div#tiles>div>a" "Pete Aguilar" "https://peteaguilar.com/on-the-issues/" "div#not-secret>h3" "section#article>div#insides"
-# ./scraper.py -fl "div>div#_2Z-zX>a" "Josh Barnett" "https://www.barnettforaz.com/cd7-issues-arizona" "div>div#_2Z-zX>a" "div#_1Q9if"
+# ./scraper.py -fl "div>div#_2Z-zX>a" "Josh Barnett" "https://www.barnettforaz.com/cd7-issues-arizona" "div>div#_2Z-zX>a" "main>div#_1Q9if"
 
 main()
