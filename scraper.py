@@ -157,6 +157,8 @@ def get_descriptions(soup, url):
             soup = get_page_soup(link)
             # get the issue description by using the description pattern arg
             description = get_text_by_pattern(soup, args.description_pattern)
+            # below line get rid of the title
+            description = description[1:]
             # convert paragraphs of description into a string
             description = "\n".join(description)
             descriptions.append(description.strip())
@@ -169,6 +171,8 @@ def get_descriptions(soup, url):
 def main():
     soup = get_page_soup(args.url)
     issues = list(filter(None, get_issues(soup)))
+    # below line get rid of the "donate" which is not an issue
+    issues = issues[1:]
     descriptions = list(filter(None, get_descriptions(soup, args.url)))
     print(issues)
     for i, desc in enumerate(descriptions):
@@ -200,7 +204,8 @@ def main():
         writer = csv.writer(csvfile)
         for i in range(length):
             writer.writerow([args.name, ftfy.fix_text(issues[i]),
-                             ftfy.fix_text(descriptions[i]), args.url])
+                             # get rid of non zero white space and non breaking white space
+                             ftfy.fix_text(descriptions[i]).replace('\u200b', '').replace("\u00A0", ""), args.url])
         writer.writerow(["", "", "", ""])
 
 # ./scraper.py "Adam Schiff" "https://adamschiff.com/issues/" "div#toggle default>h3" "div#wpb_text_column wpb_content_element>div#wpb_wrapper"
