@@ -1,1 +1,0 @@
-./scraper.py "Gregg Mele" "https://www.meleforgovernor.com/projects" "div#_1Q9if>h4#font_2" "div#_1Q9if>p#font_2"
