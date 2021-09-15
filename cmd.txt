@@ -1,0 +1,2 @@
+./scraper.py -fl "div#rendered-content>section#big-link>div>a" "Phil Murphy" "https://murphy4nj.com/issues/" "div#rendered-content>section#big-link>div>a>span" "div#rendered-content>p"
+./scraper.py -fl "div#col-sm-7>a" "Jack Ciattarelli" "https://www.jack4nj.com/" "div>h4#mar-top-0" "div#intro"

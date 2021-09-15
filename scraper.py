@@ -133,7 +133,7 @@ def get_text_by_pattern(soup, pattern, get_link=False):
             wanted.append(el.text.strip())
         # set final output as link if element is anchor tag
         else:
-            wanted.append(el["href"])
+            wanted.append("https://www.jack4nj.com/" + el["href"])
     return list(dict.fromkeys(wanted))
 
 
@@ -203,8 +203,6 @@ def main():
                              ftfy.fix_text(descriptions[i]), args.url])
         writer.writerow(["", "", "", ""])
 
-# ./scraper.py "Adam Schiff" "https://adamschiff.com/issues/" "div#toggle default>h3" "div#wpb_text_column wpb_content_element>div#wpb_wrapper"
-# ./scraper.py -fl "div#tiles>div>a" "Pete Aguilar" "https://peteaguilar.com/on-the-issues/" "div#not-secret>h3" "section#article>div#insides"
-# ./scraper.py -fl "div>div#_2Z-zX>a" "Josh Barnett" "https://www.barnettforaz.com/cd7-issues-arizona" "div>div#_2Z-zX>a" "div#_1Q9if"
+# ./scraper.py -fl "div#rendered-content>section#big-link>div>a" "Phil Murphy" "https://murphy4nj.com/issues/" "div#rendered-content>section#big-link>div>a>span" "div#rendered-content>p"
 
 main()
