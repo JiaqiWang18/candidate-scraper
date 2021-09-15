@@ -133,7 +133,7 @@ def get_text_by_pattern(soup, pattern, get_link=False):
             wanted.append(el.text.strip())
         # set final output as link if element is anchor tag
         else:
-            wanted.append("https://www.jack4nj.com/" + el["href"])
+            wanted.append(el["href"])
     return list(dict.fromkeys(wanted))
 
 
