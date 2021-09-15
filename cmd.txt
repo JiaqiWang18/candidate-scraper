@@ -1,0 +1,1 @@
+./scraper.py -fl "li#page-item-37>ul>li>a" "Madelyn Hoffman" "https://hoffmanforgovnj.com/platform/environmental-justice/" "li#page-item-37>ul>li>a" "div#elementor-widget-container>p"

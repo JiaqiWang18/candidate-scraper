@@ -94,7 +94,7 @@ def get_children(names, elements):
                 # if did not find valid children, set the element to None
                 else:
                     elements[i] = None
-                print(elements[i])
+                #print(elements[i])
         # after iterating through parent elements, set parent elements to the valid child elements, then recursion
         elements = children
     return elements
@@ -171,9 +171,10 @@ def main():
     issues = list(filter(None, get_issues(soup)))
     descriptions = list(filter(None, get_descriptions(soup, args.url)))
     print(issues)
+    descriptions.insert(2, "Madelyn Hoffman supports an Economic Bill of Rights as part of the State Constitution to guarantee certain rights to all workers. Madelyn would ban all foreclosures and evictions during the duration of the pandemic, and prevent the wave of evictions bound to happen afterward. Nobody could have predicted a global pandemic would throw so many New Jerseyans out of work. Protections need to be in place to protect those workers through the pandemic and as the crisis winds down. The Hoffman administration would actively enforce laws regarding evictions, and make it easy to report landlords illegally evicting tenants. Additionally, Madelyn would freeze all rents and mortgages for the duration of the pandemic in order to provide families with the financial relief they need to survive through this rough time. Madelyn would also push for legislation to forgive all student debt owed to state public colleges and universities. Madelyn supports a revamping and overhaul of the unemployment insurance system. Throughout the pandemic, it has been especially difficult for people to receive unemployment checks due to the antiquated system of paying unemployment in the state. Some are still waiting to qualify for unemployment more than a year after their filings. Madelyn will push the federal government to provide the state with funds to overhaul this system entirely. Additionally, Madelyn’s administration would make the process of receiving benefits such as SNAP/TANF and others from the state more transparent. A Hoffman Administration would support a universal basic income. A universal basic income would especially serve families struggling to make ends meet in New Jersey due to the pandemic, but would also combat poverty when the pandemic ends. As Dr. Martin Luther King, Jr. proposed, through his vision of UBI, all people deserve a roof over their head, food in their stomachs, clean clothes to wear, shoes on their feet, clean water, and other basic essentials as a human right. Madelyn Hoffman supports Good Jobs for ALL New Jersey workers. The state government would publicly fund and create new jobs to transition the economy to renewable alternatives and take our power grid off fossil fuels. Anyone willing and able to work in New Jersey would be guaranteed a unionized, well-paying job through the state. All workers who can work from home will be mandated to work from home for the rest of the pandemic, and all workers required to be physically present will be guaranteed hazard pay and personal protective equipment if necessary. Those same workers would be guaranteed paid and unlimited sick leave if they do catch COVID-19. COVID-19 poses a serious threat to people around the garden state, and until the pandemic subsides, all frontline workers should be guaranteed more than a token amount of  hazard pay, and all those who can work from home should. No worker should have to choose between working in unsafe conditions, vulnerable to the spread of COVID-19, and choosing to stay home in order to stay safe, but then forfeiting his/her livelihood.")
     for i, desc in enumerate(descriptions):
         print(f"======= {i} =======")
-        print(f"{desc[:10]}....{desc[-10:-1]}")
+        print(f"{desc[:50]}....{desc[-50:-1]}")
     # check if there is an issue description correspond to each issue
     if len(issues) != len(descriptions) and not args.force:
         print(f"Error: Issue length({len(issues)}) does not match description length({len(descriptions)})")
