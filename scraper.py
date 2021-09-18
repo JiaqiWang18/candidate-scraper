@@ -169,9 +169,6 @@ def get_descriptions(soup, url):
 def main():
     soup = get_page_soup(args.url)
     issues = list(filter(None, get_issues(soup)))
-    issues[3] = f'{issues[3]} {issues[4]}'
-    issues.pop(4)
-    issues= issues[3:12]
     descriptions = list(filter(None, get_descriptions(soup, args.url)))
     print(issues)
     for i, desc in enumerate(descriptions):

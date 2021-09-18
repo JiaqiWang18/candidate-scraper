@@ -1,1 +1,1 @@
-./scraper.py "Princess Blanding" "https://www.princessblanding.com/" "div#_1Q9if>h2#font_2" "div#_1Q9if>p"
+./scraper.py "Hala Ayala" "https://www.halaforvirginia.com/issues" "div#issues-option-selection>h4" "div#field-content"
