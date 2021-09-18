@@ -1,0 +1,1 @@
+./scraper.py -fl "div#issuebox>a" "Terry McAuliffe" "https://terrymcauliffe.com/issues/" "div>div#ap-issuebox-title" "div#elementor-widget-container>p"
