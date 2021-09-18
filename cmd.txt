@@ -1,0 +1,1 @@
+./scraper.py "Larry Krasner" "https://krasnerforda.com/plans-for-the-future" "div#sqs-block-content>h2>span>strong" "div#sqs-block-content>p"

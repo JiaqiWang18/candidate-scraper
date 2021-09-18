@@ -169,11 +169,11 @@ def get_descriptions(soup, url):
 def main():
     soup = get_page_soup(args.url)
     issues = list(filter(None, get_issues(soup)))
-    descriptions = list(filter(None, get_descriptions(soup, args.url)))
+    descriptions = list(filter(None, get_descriptions(soup, args.url)))[1:12]
     print(issues)
     for i, desc in enumerate(descriptions):
         print(f"======= {i} =======")
-        print(f"{desc[:10]}....{desc[-10:-1]}")
+        print(f"{desc[:20]}....{desc[-20:-1]}")
     # check if there is an issue description correspond to each issue
     if len(issues) != len(descriptions) and not args.force:
         print(f"Error: Issue length({len(issues)}) does not match description length({len(descriptions)})")
