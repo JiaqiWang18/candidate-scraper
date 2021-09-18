@@ -82,12 +82,12 @@ def get_children(names, elements):
                 if pair[1]:
                     # set the parent element to the children that matches the pattern pair
                     elements[i] = elements[i].findChildren(
-                        pair[0], {"class", pair[1]}, recursive=False
+                        pair[0], {"class", pair[1]}, recursive=True
                     )
                 # do not use class if no class
                 else:
                     # set the parent element to the children that matches the pattern pair
-                    elements[i] = elements[i].findChildren(pair[0], recursive=False)
+                    elements[i] = elements[i].findChildren(pair[0], recursive=True)
                 # if found valid children, add the array of children to existing children
                 if elements[i] is not None:
                     children.extend(elements[i])
@@ -169,11 +169,14 @@ def get_descriptions(soup, url):
 def main():
     soup = get_page_soup(args.url)
     issues = list(filter(None, get_issues(soup)))
+    issues[3] = f'{issues[3]} {issues[4]}'
+    issues.pop(4)
+    issues= issues[3:12]
     descriptions = list(filter(None, get_descriptions(soup, args.url)))
     print(issues)
     for i, desc in enumerate(descriptions):
         print(f"======= {i} =======")
-        print(f"{desc[:10]}....{desc[-10:-1]}")
+        print(f"{desc[:20]}....{desc[-20:-1]}")
     # check if there is an issue description correspond to each issue
     if len(issues) != len(descriptions) and not args.force:
         print(f"Error: Issue length({len(issues)}) does not match description length({len(descriptions)})")

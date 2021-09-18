@@ -1,0 +1,1 @@
+./scraper.py "Princess Blanding" "https://www.princessblanding.com/" "div#_1Q9if>h2#font_2" "div#_1Q9if>p"
