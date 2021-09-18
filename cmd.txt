@@ -1,0 +1,1 @@
+./scraper.py "Glenn Youngkin" "https://www.youngkinforgovernor.com/game-plan" "div#w-tab-menu>a>div" "div#content-section-inner-01>div#content-wrap-left>div#w-richtext"
