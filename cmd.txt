@@ -1,1 +1,1 @@
-./scraper.py -fl "div#elementor-post__text>a" "Mark Herring" "https://herringforag.com/priorities/" "div>h3" "div#elementor-widget-container>p"
+./scraper.py -fl "div#elementor-post__text>a" "Jason Miyares" "https://www.jasonmiyares.com/issues" "div#_1Q9if>h2#font_2>span>span>span" "div#elementor-widget-container>p"
