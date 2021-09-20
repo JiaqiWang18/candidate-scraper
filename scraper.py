@@ -170,7 +170,6 @@ def main():
     soup = get_page_soup(args.url)
     issues = list(filter(None, get_issues(soup)))
     descriptions = list(filter(None, get_descriptions(soup, args.url)))
-    descriptions.pop(0)
     print(issues)
     for i, desc in enumerate(descriptions):
         print(f"======= {i} =======")
