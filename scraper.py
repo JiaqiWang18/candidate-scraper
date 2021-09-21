@@ -94,7 +94,7 @@ def get_children(names, elements):
                 # if did not find valid children, set the element to None
                 else:
                     elements[i] = None
-                print(elements[i])
+                #print(elements[i])
         # after iterating through parent elements, set parent elements to the valid child elements, then recursion
         elements = children
     return elements
@@ -148,7 +148,8 @@ def get_descriptions(soup, url):
     if args.follow_link:
         # get the links to each issue descriptions
         links = get_text_by_pattern(soup, args.follow_link, get_link=True)
-        print(links)
+        links = links[3:8]
+        print(f"links: {links}")
         for link in links:
             # construct full url if link is relative url
             if link[0] == "/":
@@ -168,7 +169,7 @@ def get_descriptions(soup, url):
 
 def main():
     soup = get_page_soup(args.url)
-    issues = list(filter(None, get_issues(soup)))
+    issues = list(filter(None, get_issues(soup)))[1:]
     descriptions = list(filter(None, get_descriptions(soup, args.url)))
     print(issues)
     for i, desc in enumerate(descriptions):
@@ -200,7 +201,7 @@ def main():
         writer = csv.writer(csvfile)
         for i in range(length):
             writer.writerow([args.name, ftfy.fix_text(issues[i]),
-                             ftfy.fix_text(descriptions[i]), args.url])
+                             ftfy.fix_text(descriptions[i].replace("\n", " ")), args.url])
         writer.writerow(["", "", "", ""])
 
 # ./scraper.py "Adam Schiff" "https://adamschiff.com/issues/" "div#toggle default>h3" "div#wpb_text_column wpb_content_element>div#wpb_wrapper"

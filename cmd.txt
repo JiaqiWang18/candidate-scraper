@@ -1,1 +1,1 @@
-./scraper.py -fl "header#entry-header>h5>a" "Andre Dickens" "https://andreforatlanta.com/category/issues/" "header#entry-header>h5" "div#brz-css-vtxbm>div#brz-rich-text"
+./scraper.py -fl "div#inner>div>a" "Kenneth Darnell Hill " "https://electkennyhill.com/" "div#inner>div#row-aPn_y7bqag>div#inner" "div#inner>div#c-paragraph>div#text-output>div>p"
