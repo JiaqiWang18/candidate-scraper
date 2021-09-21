@@ -1,1 +1,1 @@
-./scraper.py "Felicia Moore" "https://www.feliciamooreformayor.com/" "div#et_pb_text_inner>h3" "div#et_pb_text_inner>p"
+./scraper.py "Maxwell Manuel Martinez" "https://www.mm44mia.com/iss" "div#sqs-block-content>p>strong" "div#sqs-row"
