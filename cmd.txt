@@ -1,1 +1,1 @@
-./scraper.py "Winsome Sears" "https://winsomesears.com/issues/" "div#et_pb_text_inner>h3" "div#et_pb_text_inner>p"
+./scraper.py "Felicia Moore" "https://www.feliciamooreformayor.com/" "div#et_pb_text_inner>h3" "div#et_pb_text_inner>p"
