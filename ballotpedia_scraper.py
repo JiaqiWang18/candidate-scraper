@@ -6,6 +6,7 @@ import ftfy
 
 import requests
 from bs4 import BeautifulSoup
+from collections import OrderedDict
 from pathlib import Path
 
 parser = argparse.ArgumentParser(description="Scrapes candidate issue info")
@@ -71,7 +72,6 @@ def get_page_soup(url):
 # Gets the innermost children of the passed elements given the names where
 # names is a list of pairs of strings (element_name, element_class)
 def get_children(names, elements):
-    print(f"names: {names}")
     # iterate through pattern pairs
     for pair in names:
         children = []
@@ -94,14 +94,13 @@ def get_children(names, elements):
                 # if did not find valid children, set the element to None
                 else:
                     elements[i] = None
-                print(elements[i])
         # after iterating through parent elements, set parent elements to the valid child elements, then recursion
         elements = children
     return elements
 
 
 # Returns either the text elements or links in a given soup object by pattern
-def get_text_by_pattern(soup, pattern, get_link=False):
+def get_candidate_names_links(soup, pattern, get_link=False):
     element_names_unformatted = pattern.split(">")
     element_names = []
     # loop that parse pattern and store a list of tag, class pair
@@ -128,84 +127,29 @@ def get_text_by_pattern(soup, pattern, get_link=False):
 
     wanted = []
     for el in elements:
-        # set final output as text if element is not anchor tag
-        if not get_link:
-            wanted.append(el.text.strip())
-        # set final output as link if element is anchor tag
-        else:
-            wanted.append(el["href"])
-    return list(dict.fromkeys(wanted))
+        if el.text.strip() != '':
+            print(el["href"])
+            wanted.append((el.text.strip(), el["href"]))
+    return wanted
 
 
-# returns an array of string issues of this candidate
-def get_issues(soup):
-    issues = get_text_by_pattern(soup, args.issue_pattern)
-    return issues
-
-
-def get_descriptions(soup, url):
-    descriptions = []
-    if args.follow_link:
-        # get the links to each issue descriptions
-        links = get_text_by_pattern(soup, args.follow_link, get_link=True)
-        print(links)
-        for link in links:
-            # construct full url if link is relative url
-            if link[0] == "/":
-                link = url.rsplit('/', 1)[0] + link
-            # get soup obj of new page
-            soup = get_page_soup(link)
-            # get the issue description by using the description pattern arg
-            description = get_text_by_pattern(soup, args.description_pattern)
-            # convert paragraphs of description into a string
-            description = "\n".join(description)
-            descriptions.append(description.strip())
-    else:
-        # if all on same page, just get the description
-        descriptions = get_text_by_pattern(soup, args.description_pattern)
-    return descriptions
+def get_individual_candidate_bio(candidates_name_link):
+    link = candidates_name_link[1]
+    soup = get_page_soup(link)
+    info_box_html = soup.select('div.infobox.person')
+    candidate_data = OrderedDict([('Name', ''), ('DOB', ''), ('status', ''), ('currentOffice', ''), ('Party', ''), ('OfficeType', ''), ('Office', ''), ('State', ''), ('Email', ''), ('Education', ''), ('Profession', ''), ('District', ''), ('Photo', ''), ('Twitter', ''), ('Facebook', ''), ('Instagram', ''), ('YouTube', ''), ('Campaign Website', ''), ('Gender', ''), ('Race', ''), ('FEC ID', ''), ('recipient.cfscore', ''), ('contrib.cfscore', ''), ('Election', '')])
+    print(candidate_data)
 
 
 def main():
-    print("emmm")
     soup = get_page_soup(args.url)
-    issues = list(filter(None, get_issues(soup)))
-    descriptions = list(filter(None, get_descriptions(soup, args.url)))
-    print(issues)
-    for i, desc in enumerate(descriptions):
-        print(f"======= {i} =======")
-        print(f"{desc[:20]}....{desc[-20:-1]}")
-    # check if there is an issue description correspond to each issue
-    if len(issues) != len(descriptions) and not args.force:
-        print(f"Error: Issue length({len(issues)}) does not match description length({len(descriptions)})")
-        return
-    if (args.outfile):
-        path = args.outfile
-    else:
-        path = 'out'
+    candidates_names_links = get_candidate_names_links(soup, args.issue_pattern)
+    print(candidates_names_links)
+    get_individual_candidate_bio(candidates_names_links[1])
+    #Name,DOB,status,currentOffice,Party,OfficeType,Office,State,Email,Education,Profession,District,Photo,Twitter,Facebook,Instagram,YouTube,Campaign Website,Gender,Race,FEC ID,recipient.cfscore,contrib.cfscore,Election
 
-    Path(path).mkdir(parents=True, exist_ok=True)
 
-    filename = path + "/" + args.name.replace(' ', '_') + '.csv'
-    length = len(issues)
-    # add empty string to whichever is not parsed successfully
-    if len(issues) < len(descriptions):
-        length = len(descriptions)
-        while len(issues) < length:
-            issues.append("")
-    else:
-        while len(descriptions) < length:
-            descriptions.append("")
 
-    with open(filename, 'w') as csvfile:
-        writer = csv.writer(csvfile)
-        for i in range(length):
-            writer.writerow([args.name, ftfy.fix_text(issues[i]),
-                             ftfy.fix_text(descriptions[i]), args.url])
-        writer.writerow(["", "", "", ""])
 
-# ./scraper.py "Adam Schiff" "https://adamschiff.com/issues/" "div#toggle default>h3" "div#wpb_text_column wpb_content_element>div#wpb_wrapper"
-# ./scraper.py -fl "div#tiles>div>a" "Pete Aguilar" "https://peteaguilar.com/on-the-issues/" "div#not-secret>h3" "section#article>div#insides"
-# ./scraper.py -fl "div>div#_2Z-zX>a" "Josh Barnett" "https://www.barnettforaz.com/cd7-issues-arizona" "div>div#_2Z-zX>a" "div#_1Q9if"
-
-main()
+if __name__ == '__main__':
+    main()

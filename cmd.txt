@@ -1,1 +1,1 @@
-./scraper.py "Felicia Moore" "https://www.feliciamooreformayor.com/" "div#et_pb_text_inner>h3" "div#et_pb_text_inner>p"
+./ballotpedia_scraper.py "Virginia House of Delegates" "https://ballotpedia.org/Virginia_House_of_Delegates_elections,_2021" "table#candidateListTablePartisan>p>a" "div#wpb_text_column wpb_content_element>div#wpb_wrapper"
