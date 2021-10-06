@@ -3,7 +3,7 @@ import argparse
 import csv
 import pprint
 import ftfy
-
+import re
 import requests
 from bs4 import BeautifulSoup
 from collections import OrderedDict
@@ -54,6 +54,15 @@ parser.add_argument(
 
 args = parser.parse_args()
 pp = pprint.PrettyPrinter(indent=4)
+STATE_NAMES = ["Alaska", "Alabama", "Arkansas", "American Samoa", "Arizona", "California", "Colorado", "Connecticut",
+               "District of Columbia", "Delaware", "Florida", "Georgia", "Guam", "Hawaii", "Iowa", "Idaho",
+               "Illinois", "Indiana", "Kansas", "Kentucky", "Louisiana", "Massachusetts", "Maryland", "Maine",
+               "Michigan", "Minnesota", "Missouri", "Mississippi", "Montana", "North Carolina", "North Dakota",
+               "Nebraska", "New Hampshire", "New Jersey", "New Mexico", "Nevada", "New York", "Ohio", "Oklahoma",
+               "Oregon", "Pennsylvania", "Puerto Rico", "Rhode Island", "South Carolina", "South Dakota", "Tennessee",
+               "Texas", "Utah", "Virginia", "Virgin Islands", "Vermont", "Washington", "Wisconsin", "West Virginia",
+               "Wyoming"]
+OFFICE_TYPES = ["House of Delegates"]
 
 
 # Generates beautiful soup object
@@ -100,7 +109,7 @@ def get_children(names, elements):
 
 
 # Returns either the text elements or links in a given soup object by pattern
-def get_candidate_names_links(soup, pattern, get_link=False):
+def get_candidate_names_links(soup, pattern):
     element_names_unformatted = pattern.split(">")
     element_names = []
     # loop that parse pattern and store a list of tag, class pair
@@ -115,7 +124,11 @@ def get_candidate_names_links(soup, pattern, get_link=False):
     # now find parent elements
     if element_names[0][1]:
         # if has class name, find with class
-        elements = soup.find_all(element_names[0], {"class": element_names[0][1]})
+        if element_names[0][1][0] == "^":
+            elements = soup.find_all(id=element_names[0][1][1:])
+            print(elements)
+        else:
+            elements = soup.find_all(element_names[0], {"class": element_names[0][1]})
     else:
         # find without class
         elements = soup.find_all(element_names[0])
@@ -128,27 +141,87 @@ def get_candidate_names_links(soup, pattern, get_link=False):
     wanted = []
     for el in elements:
         if el.text.strip() != '':
-            print(el["href"])
             wanted.append((el.text.strip(), el["href"]))
+            print(el.text.strip())
+            if el.text.strip() == "Joe Borelli":
+                break
     return wanted
 
 
 def get_individual_candidate_bio(candidates_name_link):
     link = candidates_name_link[1]
     soup = get_page_soup(link)
-    info_box_html = soup.select('div.infobox.person')
-    candidate_data = OrderedDict([('Name', ''), ('DOB', ''), ('status', ''), ('currentOffice', ''), ('Party', ''), ('OfficeType', ''), ('Office', ''), ('State', ''), ('Email', ''), ('Education', ''), ('Profession', ''), ('District', ''), ('Photo', ''), ('Twitter', ''), ('Facebook', ''), ('Instagram', ''), ('YouTube', ''), ('Campaign Website', ''), ('Gender', ''), ('Race', ''), ('FEC ID', ''), ('recipient.cfscore', ''), ('contrib.cfscore', ''), ('Election', '')])
-    print(candidate_data)
+    info_box_html = soup.select('div.infobox.person')[0]
+    candidate_data = OrderedDict(
+        [('Name', candidates_name_link[0]), ('DOB', ''), ('status', ''), ('currentOffice', ''), ('Party', ''),
+         ('OfficeType', ''),
+         ('Office', ''), ('State', ''), ('Email', ''), ('Education', ''), ('Profession', ''), ('District', ''),
+         ('Photo', ''), ('Twitter', ''), ('Facebook', ''), ('Instagram', ''), ('YouTube', ''), ('Campaign Website', ''),
+         ('Gender', ''), ('Race', ''), ('FEC ID', ''), ('recipient.cfscore', ''), ('contrib.cfscore', '')])
+    candidate_data['Party'] = info_box_html.findChild()['class'][2]
+    photo = info_box_html.findChild({'img'})['src']
+    candidate_data['Photo'] = photo if "Placeholder" not in photo else ''
+    infos = info_box_html.findChildren(recursive=False)
+    print(f"start parsing bio for {candidate_data['Name']}")
+    for i, child in enumerate(infos):
+        if "Candidate," in child.text:
+            full_offcie_name = child.text.strip()
+            for s in STATE_NAMES:
+                if s in full_offcie_name:
+                    candidate_data['State'] = s
+                    break
+            for o in OFFICE_TYPES:
+                if o in full_offcie_name:
+                    candidate_data['OfficeType'] = o
+            candidate_data['Office'] = f"{candidate_data['State']} {candidate_data['OfficeType']}"
+            if "District" in full_offcie_name:
+                candidate_data['District'] = full_offcie_name[full_offcie_name.index("District"):]
+        elif 'Profession' in child.text:
+            candidate_data['Profession'] = child.text[child.text.index("Profession") + 11:].strip()
+        elif "Campaign Facebook" in child.text:
+            candidate_data['Facebook'] = child.findChild({'a'})['href']
+        elif "Campaign Instagram" in child.text:
+            candidate_data['Instagram'] = child.findChild({'a'})['href']
+        elif "Campaign Twitter" in child.text:
+            candidate_data['Twitter'] = child.findChild({'a'})['href']
+        elif "Campaign website" in child.text:
+            candidate_data['Campaign Website'] = child.findChild({'a'})['href']
+        elif "YouTube" in child.text:
+            candidate_data['YouTube'] = child.findChild({'a'})['href']
+        elif "Education" in child.text:
+            edu = ", ".join(
+                [re.sub("[\\t\\n\\r]+", "", tag.text) for tag in list(infos[i + 1].find_all({'div'}))][0:2])
+            candidate_data['Education'] = edu
+        elif "Tenure" in child.text:
+            current_office = re.sub("[\\t\\n\\r]+", "", infos[i - 1].text)
+            candidate_data['currentOffice'] = current_office
+        # print(f"------{i}-------\n{child.text.strip()}")
+
+    return list(candidate_data.values())
 
 
 def main():
     soup = get_page_soup(args.url)
+    election_name = get_children([('h4', None)], soup.find_all({'table'}))[0].text
     candidates_names_links = get_candidate_names_links(soup, args.issue_pattern)
-    print(candidates_names_links)
-    get_individual_candidate_bio(candidates_names_links[1])
-    #Name,DOB,status,currentOffice,Party,OfficeType,Office,State,Email,Education,Profession,District,Photo,Twitter,Facebook,Instagram,YouTube,Campaign Website,Gender,Race,FEC ID,recipient.cfscore,contrib.cfscore,Election
-
-
+    print(len(candidates_names_links))
+    # print(candidates_names_links)
+    if (args.outfile):
+        path = args.outfile
+    else:
+        path = 'ballotpedia_out'
+    Path(path).mkdir(parents=True, exist_ok=True)
+    filename = path + "/" + args.name.replace(' ', '_') + '.csv'
+    with open(filename, 'w') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(
+            "Name,DOB,status,currentOffice,Party,OfficeType,Office,State,Email,Education,Profession,District,Photo,Twitter"
+            ",Facebook,Instagram,YouTube,Campaign Website,Gender,Race,FEC ID,recipient.cfscore,contrib.cfscore,Election".split(","))
+        for i, cl in enumerate(candidates_names_links):
+            cand_data = get_individual_candidate_bio(cl)
+            cand_data.append(election_name)
+            writer.writerow(cand_data)
+            print(f"{i+1}/{len(candidates_names_links)} Completed")
 
 
 if __name__ == '__main__':

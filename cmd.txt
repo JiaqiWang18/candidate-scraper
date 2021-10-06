@@ -1,1 +1,2 @@
-./ballotpedia_scraper.py "Virginia House of Delegates" "https://ballotpedia.org/Virginia_House_of_Delegates_elections,_2021" "table#candidateListTablePartisan>p>a" "div#wpb_text_column wpb_content_element>div#wpb_wrapper"
+./ballotpedia_scraper.py "Virginia House of Delegates" "https://ballotpedia.org/Virginia_House_of_Delegates_elections,_2021#General_election_candidates" "div>table#candidateListTablePartisan>p>a" "div#wpb_text_column wpb_content_element>div#wpb_wrapper"
+./ballotpedia_scraper.py "New York City Council" "https://ballotpedia.org/City_elections_in_New_York,_New_York_(2021)#City_council" "div>table#candidateListTablePartisan>p>a" "div#wpb_text_column wpb_content_element>div#wpb_wrapper"
