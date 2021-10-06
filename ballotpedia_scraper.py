@@ -9,31 +9,16 @@ from bs4 import BeautifulSoup
 from collections import OrderedDict
 from pathlib import Path
 
-parser = argparse.ArgumentParser(description="Scrapes candidate issue info")
-parser.add_argument("name", metavar="N", type=str, help="Name of candidate")
-parser.add_argument("url", metavar="U", type=str, help="URL of candidate")
+parser = argparse.ArgumentParser(description="Scrapes candidate bio info")
+parser.add_argument("url", metavar="U", type=str, help="URL of candidate list")
 parser.add_argument("-o", "--outfile", dest='outfile', type=str, required=False,
                     help="location of the output file (default is out)")
 
 parser.add_argument(
-    "issue_pattern",
-    metavar="I",
-    type=str,
-    help="HTML Element pattern of the issue element, see README for pattern explanation",
-)
-parser.add_argument(
-    "description_pattern",
+    "table_type",
     metavar="D",
     type=str,
-    help="HTML Element pattern of the description element, see README for pattern explanation",
-)
-parser.add_argument(
-    "-fl",
-    "--follow-link",
-    dest="follow_link",
-    type=str,
-    required=False,
-    help="If issue element is link to a page with the description",
+    help="HTML Element pattern of the type of table, see README for pattern explanation",
 )
 
 parser.add_argument(
@@ -63,6 +48,10 @@ STATE_NAMES = ["Alaska", "Alabama", "Arkansas", "American Samoa", "Arizona", "Ca
                "Texas", "Utah", "Virginia", "Virgin Islands", "Vermont", "Washington", "Wisconsin", "West Virginia",
                "Wyoming"]
 OFFICE_TYPES = ["House of Delegates"]
+TABLE_PATTERN = {
+    'table': 'div>table#candidateListTablePartisan>p>a',
+    'list': ''
+}
 
 
 # Generates beautiful soup object
@@ -202,8 +191,9 @@ def get_individual_candidate_bio(candidates_name_link):
 
 def main():
     soup = get_page_soup(args.url)
-    election_name = get_children([('h4', None)], soup.find_all({'table'}))[0].text
-    candidates_names_links = get_candidate_names_links(soup, args.issue_pattern)
+    if args.table_type == 'table':
+        election_name = get_children([('h4', None)], soup.find_all({'table'}))[0].text
+    candidates_names_links = get_candidate_names_links(soup, TABLE_PATTERN[args.table_type])
     print(len(candidates_names_links))
     # print(candidates_names_links)
     if (args.outfile):
@@ -211,17 +201,18 @@ def main():
     else:
         path = 'ballotpedia_out'
     Path(path).mkdir(parents=True, exist_ok=True)
-    filename = path + "/" + args.name.replace(' ', '_') + '.csv'
+    filename = path + "/" + election_name.replace(' ', '_') + '.csv'
     with open(filename, 'w') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(
             "Name,DOB,status,currentOffice,Party,OfficeType,Office,State,Email,Education,Profession,District,Photo,Twitter"
-            ",Facebook,Instagram,YouTube,Campaign Website,Gender,Race,FEC ID,recipient.cfscore,contrib.cfscore,Election".split(","))
+            ",Facebook,Instagram,YouTube,Campaign Website,Gender,Race,FEC ID,recipient.cfscore,contrib.cfscore,Election".split(
+                ","))
         for i, cl in enumerate(candidates_names_links):
             cand_data = get_individual_candidate_bio(cl)
             cand_data.append(election_name)
             writer.writerow(cand_data)
-            print(f"{i+1}/{len(candidates_names_links)} Completed")
+            print(f"{i + 1}/{len(candidates_names_links)} Completed")
 
 
 if __name__ == '__main__':
