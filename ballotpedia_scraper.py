@@ -22,11 +22,10 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    "-f",
-    "--force",
-    dest="force",
-    action='store_true',
-    help="Force write to csv"
+    "name_of_last_candidate_in_table",
+    metavar="D",
+    type=str,
+    help="Used to separate tables",
 )
 
 parser.add_argument(
@@ -37,21 +36,86 @@ parser.add_argument(
     help="Force to make invalid HTTP request"
 )
 
+parser.add_argument(
+    "-f",
+    dest="name_of_first_candidate_in_table",
+    metavar="D",
+    type=str,
+    required=False,
+    help="Used to separate tables",
+)
+
 args = parser.parse_args()
 pp = pprint.PrettyPrinter(indent=4)
-STATE_NAMES = ["Alaska", "Alabama", "Arkansas", "American Samoa", "Arizona", "California", "Colorado", "Connecticut",
-               "District of Columbia", "Delaware", "Florida", "Georgia", "Guam", "Hawaii", "Iowa", "Idaho",
-               "Illinois", "Indiana", "Kansas", "Kentucky", "Louisiana", "Massachusetts", "Maryland", "Maine",
-               "Michigan", "Minnesota", "Missouri", "Mississippi", "Montana", "North Carolina", "North Dakota",
-               "Nebraska", "New Hampshire", "New Jersey", "New Mexico", "Nevada", "New York", "Ohio", "Oklahoma",
-               "Oregon", "Pennsylvania", "Puerto Rico", "Rhode Island", "South Carolina", "South Dakota", "Tennessee",
-               "Texas", "Utah", "Virginia", "Virgin Islands", "Vermont", "Washington", "Wisconsin", "West Virginia",
-               "Wyoming"]
-OFFICE_TYPES = ["House of Delegates"]
+STATE_NAMES = {
+    "Alabama": "AL",
+    "Alaska": "AK",
+    "Arizona": "AZ",
+    "Arkansas": "AR",
+    "California": "CA",
+    "Colorado": "CO",
+    "Connecticut": "CT",
+    "Delaware": "DE",
+    "Florida": "FL",
+    "Georgia": "GA",
+    "Hawaii": "HI",
+    "Idaho": "ID",
+    "Illinois": "IL",
+    "Indiana": "IN",
+    "Iowa": "IA",
+    "Kansas": "KS",
+    "Kentucky": "KY",
+    "Louisiana": "LA",
+    "Maine": "ME",
+    "Maryland": "MD",
+    "Massachusetts": "MA",
+    "Michigan": "MI",
+    "Minnesota": "MN",
+    "Mississippi": "MS",
+    "Missouri": "MO",
+    "Montana": "MT",
+    "Nebraska": "NE",
+    "Nevada": "NV",
+    "New Hampshire": "NH",
+    "New Jersey": "NJ",
+    "New Mexico": "NM",
+    "New York": "NY",
+    "North Carolina": "NC",
+    "North Dakota": "ND",
+    "Ohio": "OH",
+    "Oklahoma": "OK",
+    "Oregon": "OR",
+    "Pennsylvania": "PA",
+    "Rhode Island": "RI",
+    "South Carolina": "SC",
+    "South Dakota": "SD",
+    "Tennessee": "TN",
+    "Texas": "TX",
+    "Utah": "UT",
+    "Vermont": "VT",
+    "Virginia": "VA",
+    "Washington": "WA",
+    "West Virginia": "WV",
+    "Wisconsin": "WI",
+    "Wyoming": "WY",
+    "District of Columbia": "DC",
+    "American Samoa": "AS",
+    "Guam": "GU",
+    "Northern Mariana Islands": "MP",
+    "Puerto Rico": "PR",
+    "United States Minor Outlying Islands": "UM",
+    "U.S. Virgin Islands": "VI",
+}
+OFFICE_TYPES = ["House of Representatives", "District Attorney", "Lieutenant Governor", "House of Delegates",
+                "City Council", "Governor", "U.S. House", "Mayor", "City Controller", "Court of Common Pleas",
+                "Municipal Court", "City Attorney"]
 TABLE_PATTERN = {
     'table': 'div>table#candidateListTablePartisan>p>a',
-    'list': ''
+    'list': 'tr#results_row>a'
 }
+TABLE_HEADER = "Name,DOB,status,currentOffice,Party,OfficeType,Office,State,Email,Education,Profession,District,Photo," \
+               "Twitter,Facebook,Instagram,YouTube,Campaign Website,Gender,Race,FEC ID,recipient.cfscore,contrib.cfscore," \
+               "Election".split(",")
 
 
 # Generates beautiful soup object
@@ -130,10 +194,13 @@ def get_candidate_names_links(soup, pattern):
     wanted = []
     for el in elements:
         if el.text.strip() != '':
+            if el.text.strip() == args.name_of_first_candidate_in_table:
+                wanted = []
             wanted.append((el.text.strip(), el["href"]))
-            print(el.text.strip())
-            if el.text.strip() == "Joe Borelli":
+            if el.text.strip() == args.name_of_last_candidate_in_table:
                 break
+    for w in wanted:
+        print(w[0])
     return wanted
 
 
@@ -146,8 +213,11 @@ def get_individual_candidate_bio(candidates_name_link):
          ('OfficeType', ''),
          ('Office', ''), ('State', ''), ('Email', ''), ('Education', ''), ('Profession', ''), ('District', ''),
          ('Photo', ''), ('Twitter', ''), ('Facebook', ''), ('Instagram', ''), ('YouTube', ''), ('Campaign Website', ''),
-         ('Gender', ''), ('Race', ''), ('FEC ID', ''), ('recipient.cfscore', ''), ('contrib.cfscore', '')])
-    candidate_data['Party'] = info_box_html.findChild()['class'][2]
+         ('Gender', ''), ('Race', ''), ('FEC ID', ''), ('recipient.cfscore', ''), ('contrib.cfscore', ''),
+         ('Election', '')])
+    candidate_data['Party'] = ' '.join(
+        info_box_html.findChild()['class'][2:len(info_box_html.findChild()['class']) - 1])
+    if candidate_data['Party'] == "Democratic": candidate_data['Party'] = "Democrat"
     photo = info_box_html.findChild({'img'})['src']
     candidate_data['Photo'] = photo if "Placeholder" not in photo else ''
     infos = info_box_html.findChildren(recursive=False)
@@ -157,7 +227,7 @@ def get_individual_candidate_bio(candidates_name_link):
             full_offcie_name = child.text.strip()
             for s in STATE_NAMES:
                 if s in full_offcie_name:
-                    candidate_data['State'] = s
+                    candidate_data['State'] = STATE_NAMES[s]
                     break
             for o in OFFICE_TYPES:
                 if o in full_offcie_name:
@@ -174,6 +244,10 @@ def get_individual_candidate_bio(candidates_name_link):
         elif "Campaign Twitter" in child.text:
             candidate_data['Twitter'] = child.findChild({'a'})['href']
         elif "Campaign website" in child.text:
+            candidate_data['Campaign Website'] = child.findChild({'a'})['href']
+        elif "Official website" in child.text:
+            candidate_data['Campaign Website'] = child.findChild({'a'})['href']
+        elif "Personal website" in child.text:
             candidate_data['Campaign Website'] = child.findChild({'a'})['href']
         elif "YouTube" in child.text:
             candidate_data['YouTube'] = child.findChild({'a'})['href']
@@ -193,10 +267,14 @@ def main():
     soup = get_page_soup(args.url)
     if args.table_type == 'table':
         election_name = get_children([('h4', None)], soup.find_all({'table'}))[0].text
+    else:
+        election_name = get_children([('h5', 'votebox-header-election-type')],
+                                     soup.find_all('div', {'class': 'race_header nonpartisan'}))[2].text
+    print(election_name)
     candidates_names_links = get_candidate_names_links(soup, TABLE_PATTERN[args.table_type])
     print(len(candidates_names_links))
     # print(candidates_names_links)
-    if (args.outfile):
+    if args.outfile:
         path = args.outfile
     else:
         path = 'ballotpedia_out'
@@ -204,13 +282,9 @@ def main():
     filename = path + "/" + election_name.replace(' ', '_') + '.csv'
     with open(filename, 'w') as csvfile:
         writer = csv.writer(csvfile)
-        writer.writerow(
-            "Name,DOB,status,currentOffice,Party,OfficeType,Office,State,Email,Education,Profession,District,Photo,Twitter"
-            ",Facebook,Instagram,YouTube,Campaign Website,Gender,Race,FEC ID,recipient.cfscore,contrib.cfscore,Election".split(
-                ","))
+        writer.writerow(TABLE_HEADER)
         for i, cl in enumerate(candidates_names_links):
             cand_data = get_individual_candidate_bio(cl)
-            cand_data.append(election_name)
             writer.writerow(cand_data)
             print(f"{i + 1}/{len(candidates_names_links)} Completed")
 
