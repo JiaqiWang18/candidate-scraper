@@ -16,14 +16,14 @@ parser.add_argument("-o", "--outfile", dest='outfile', type=str, required=False,
 
 parser.add_argument(
     "table_type",
-    metavar="D",
+    metavar="T",
     type=str,
     help="HTML Element pattern of the type of table, see README for pattern explanation",
 )
 
 parser.add_argument(
     "name_of_last_candidate_in_table",
-    metavar="D",
+    metavar="L",
     type=str,
     help="Used to separate tables",
 )
@@ -34,6 +34,24 @@ parser.add_argument(
     dest="invalid",
     action='store_true',
     help="Force to make invalid HTTP request"
+)
+
+parser.add_argument(
+    "-n",
+    dest="table_name",
+    metavar="D",
+    type=str,
+    required=False,
+    help="keyword to match the title of table incase there are multiple in one page",
+)
+
+parser.add_argument(
+    "-tn",
+    dest="user_specified_table_name",
+    metavar="D",
+    type=str,
+    required=False,
+    help="user specify table name",
 )
 
 parser.add_argument(
@@ -108,10 +126,12 @@ STATE_NAMES = {
 }
 OFFICE_TYPES = ["House of Representatives", "District Attorney", "Lieutenant Governor", "House of Delegates",
                 "City Council", "Governor", "U.S. House", "Mayor", "City Controller", "Court of Common Pleas",
-                "Municipal Court", "City Attorney"]
+                "Municipal Court", "City Attorney", "Comptroller", "Advisory Council", "City Clerk", "Board of Commissioners",
+                "At-large Post"]
 TABLE_PATTERN = {
     'table': 'div>table#candidateListTablePartisan>p>a',
-    'list': 'tr#results_row>a'
+    'list': 'tr#results_row>a',
+    'single-table': 'a'
 }
 TABLE_HEADER = "Name,DOB,status,currentOffice,Party,OfficeType,Office,State,Email,Education,Profession,District,Photo," \
                "Twitter,Facebook,Instagram,YouTube,Campaign Website,Gender,Race,FEC ID,recipient.cfscore,contrib.cfscore," \
@@ -206,6 +226,7 @@ def get_candidate_names_links(soup, pattern):
 
 def get_individual_candidate_bio(candidates_name_link):
     link = candidates_name_link[1]
+    print(link)
     soup = get_page_soup(link)
     info_box_html = soup.select('div.infobox.person')[0]
     candidate_data = OrderedDict(
@@ -232,7 +253,7 @@ def get_individual_candidate_bio(candidates_name_link):
             for o in OFFICE_TYPES:
                 if o in full_offcie_name:
                     candidate_data['OfficeType'] = o
-            candidate_data['Office'] = f"{candidate_data['State']} {candidate_data['OfficeType']}"
+            candidate_data['Office'] = child.text[child.text.index('Candidate,')+10:].strip()
             if "District" in full_offcie_name:
                 candidate_data['District'] = full_offcie_name[full_offcie_name.index("District"):]
         elif 'Profession' in child.text:
@@ -265,13 +286,26 @@ def get_individual_candidate_bio(candidates_name_link):
 
 def main():
     soup = get_page_soup(args.url)
+    election_names = []
+    election_name = None
     if args.table_type == 'table':
-        election_name = get_children([('h4', None)], soup.find_all({'table'}))[0].text
-    else:
-        election_name = get_children([('h5', 'votebox-header-election-type')],
-                                     soup.find_all('div', {'class': 'race_header nonpartisan'}))[2].text
+        election_names = get_children([('h4', None)], soup.find_all({'table'}))
+        election_name = election_names[0].text
+    elif args.table_type == 'list':
+        election_names = get_children([('h5', 'votebox-header-election-type')],
+                                     soup.find_all('div', {'class': 'race_header nonpartisan'}))
+        election_name = election_names[0].text
+    if args.table_name:
+        for en in election_names:
+            if args.table_name in en.text:
+                election_name = en.text.strip()
+    if args.user_specified_table_name:
+        election_name = args.user_specified_table_name
+    if not election_name:
+        raise Exception("Crawler failed to find election name, please use flag -tn to specify one")
     print(election_name)
     candidates_names_links = get_candidate_names_links(soup, TABLE_PATTERN[args.table_type])
+    print(candidates_names_links)
     print(len(candidates_names_links))
     # print(candidates_names_links)
     if args.outfile:
